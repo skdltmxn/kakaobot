@@ -1,0 +1,4 @@
+gevent==1.2.1
+pycrypto==2.6.1
+pytz==2016.10
+psycopg2==2.7.1
