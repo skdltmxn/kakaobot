@@ -1,4 +1,5 @@
-gevent==1.2.1
+gevent==1.2.2
 pycrypto==2.6.1
-pytz==2016.10
-psycopg2==2.7.1
+pytz==2017.3
+psycopg2==2.7.3.2
+websocket-client==0.44.0

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import gevent
+from gevent.threadpool import ThreadPool
 import pickle
 import json
 import urlparse
@@ -15,13 +16,17 @@ from hangang import *
 from help import *
 from mafiagame import *
 from jeonghan import *
-from yamin import *
+from music import *
+from share import *
+from dday import *
+from keywords import *
+from coin import *
 
 
 class Botdol(Bot):
     def __init__(self):
         super(Botdol, self).__init__()
-        self._version = 0.6
+        self._version = 1.0
         self._name = "봇돌이"
 
         urlparse.uses_netloc.append("postgres")
@@ -39,8 +44,13 @@ class Botdol(Bot):
             self._init_db(cursor)
             self._variable = Variable.load(cursor)
             self._wordquiz = Wordquiz.load(cursor)
+            self._dday = Dday.load(cursor)
+            self._keyword = Keyword.load(cursor)
 
         self._mafiagame = MafiaGame()
+        self._coinanalyzer = CoinAnalyzer()
+        self._pool = ThreadPool(1)
+        self._pool.spawn(self._coinanalyzer.run)
 
         # 빨래통
         self.add_command(
@@ -57,8 +67,14 @@ class Botdol(Bot):
         self.add_command(111740297355267, WordquizImpeachCommand("ㅋㅌ", self._wordquiz))
         self.add_command(111740297355267, SummaryCommand("세줄요약"))
         self.add_command(111740297355267, MafiaCommand("ㅁㅍㅇ", self._mafiagame))
-        self.add_command(111740297355267, JeonghanCommand("정한아"))
-        self.add_command(111740297355267, YaminCommand("ㅇㅁ"))
+        self.add_command(111740297355267, MusicSearchCommand("ㅇㄱ"))
+        self.add_command(111740297355267, MusicDownloadCommand("ㅇㄷ"))
+        self.add_command(111740297355267, ShareCommand("지분"))
+        self.add_command(111740297355267, DdayListOrAddCommand("ㄷㄷㅇ", self._dday))
+        self.add_command(111740297355267, DdayRemoveCommand("ㄷㅅ", self._dday))
+        self.add_command(111740297355267, KeywordListOrAddCommand("ㅋㅇㄷ", self._keyword))
+        self.add_command(111740297355267, KeywordRemoveCommand("ㅋㅅ", self._keyword))
+        self.add_command(111740297355267, CoinCommand("ㅂㅌ", self._coinanalyzer))
         # help must be added at the last
         self.add_command(111740297355267, HelpCommand("?", self._commands.get(111740297355267, {})))
 
@@ -96,6 +112,8 @@ class Botdol(Bot):
         with self._pgconn.cursor() as cursor:
             Variable.save(cursor, self._variable.var())
             Wordquiz.save(cursor, self._wordquiz)
+            Dday.save(cursor, self._dday.dday())
+            Keyword.save(cursor, self._keyword.keyword())
             self._pgconn.commit()
 
     def on_connect(self, sess):
@@ -116,11 +134,10 @@ class Botdol(Bot):
 
         # none commands
         if chat_id == 111740297355267:
-            if "순복" in message:
-                sess.send_text("삐빅! 순복이 감지되었습니다! 발신자: {0}".format(author_nick), chat_id)
-
-            if "정한아" in message:
-                sess.send_text("술먹자!", chat_id)
+            for key, word in self._keyword.keyword().iteritems():
+                if key in message:
+                    word = word.replace("#sender#", author_nick)
+                    sess.send_text(word, chat_id)
 
             quiz = self._wordquiz
 

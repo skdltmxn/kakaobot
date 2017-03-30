@@ -190,6 +190,7 @@ class WordquizProduceCommand(Command):
 
     def run(self, sess, args, chat):
         cmd = self.trigger()
+        chat_id = chat.chat_id()
 
         if len(args) < 1:
             sess.send_text(self.usage(), chat_id)

@@ -242,6 +242,9 @@ class MafiaGame(object):
         return self._suspect_votes.get(player, 0)
 
     def can_pick_suspect(self):
+        if len(self._suspect_voters) == 0:
+            return False
+
         if len(self._suspect_voters) == len(self._livings):
             return True
 
